@@ -1,0 +1,84 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_RnD_DR_CI_CD_PROD_name": {
+            "defaultValue": "RnD-DR-CI_CD-PROD",
+            "type": "String"
+        },
+        "connections_kusto_externalid": {
+            "defaultValue": "/subscriptions/bee36701-c5c5-4cb9-a323-e714f5395a83/resourceGroups/ODL-RnD-DevOps/providers/Microsoft.Web/connections/kusto",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_RnD_DR_CI_CD_PROD_name')]",
+            "location": "eastus",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Recurrence": {
+                            "recurrence": {
+                                "frequency": "Day",
+                                "interval": 5,
+                                "startTime": "2023-06-08T07:10:00Z"
+                            },
+                            "evaluatedRecurrence": {
+                                "frequency": "Day",
+                                "interval": 5,
+                                "startTime": "2023-06-08T07:10:00Z"
+                            },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "Run_control_command_and_render_a_chart": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "chartType": "Html Table",
+                                    "cluster": "https://pocadx2.southeastasia.kusto.windows.net",
+                                    "csl": ".set-or-append KHI_SAP_Data_CI_CD <|\nKHI_SAP_Data_Prod\n| where Order ==2193829\n| project-away Manual_Entry_For_OEE,Manual_Entry_For_OEE_CreatedBy,Manual_Entry_Before_11AM,Manual_Entry_Before_11AM_CreatedBy",
+                                    "db": "tapaltea_719"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['kusto']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/RunKustoAndVisualizeResults/true"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "kusto": {
+                                "connectionId": "[parameters('connections_kusto_externalid')]",
+                                "connectionName": "kusto",
+                                "id": "/subscriptions/bee36701-c5c5-4cb9-a323-e714f5395a83/providers/Microsoft.Web/locations/eastus/managedApis/kusto"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
