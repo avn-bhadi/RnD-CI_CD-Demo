@@ -63,6 +63,25 @@
                                 "method": "post",
                                 "path": "/RunKustoAndVisualizeResults/true"
                             }
+                        },
+                        "Test_Case_1": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "chartType": "Html Table",
+                                    "cluster": "https://pocadx2.southeastasia.kusto.windows.net",
+                                    "csl": ".set-or-append KHI_SAP_Data_CI_CD <|\nKHI_SAP_Data_Prod\n| where Order ==2193000\n| project-away Manual_Entry_For_OEE,Manual_Entry_For_OEE_CreatedBy,Manual_Entry_Before_11AM,Manual_Entry_Before_11AM_CreatedBy",
+                                    "db": "tapaltea_719"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['kusto']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/RunKustoAndVisualizeResults/true"
+                            }
                         }
                     },
                     "outputs": {}
