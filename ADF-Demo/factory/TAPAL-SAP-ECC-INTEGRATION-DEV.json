@@ -1,0 +1,9 @@
+{
+	"name": "TAPAL-SAP-ECC-INTEGRATION-DEV",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "6c36421c-7083-4a00-b9e0-ef042005647c",
+		"tenantId": "0f34cb0d-38ea-428d-8114-6486d17b9df5"
+	}
+}
