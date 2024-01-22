@@ -1,0 +1,93 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "TAPAL-SAP-ECC-INTEGRATION-DEV"
+		},
+		"AzureDataExplorer1_servicePrincipalKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalKey' of 'AzureDataExplorer1'"
+		},
+		"AzureDataExplorer1_properties_typeProperties_endpoint": {
+			"type": "string",
+			"defaultValue": "https://pocadx2.southeastasia.kusto.windows.net"
+		},
+		"AzureDataExplorer1_properties_typeProperties_tenant": {
+			"type": "string",
+			"defaultValue": "0f34cb0d-38ea-428d-8114-6486d17b9df5"
+		},
+		"AzureDataExplorer1_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "1813de48-2733-4220-ab74-7804859f8fb6"
+		},
+		"AzureDataExplorer1_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "tapaltea_761"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataExplorer1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDataExplorer",
+				"typeProperties": {
+					"endpoint": "[parameters('AzureDataExplorer1_properties_typeProperties_endpoint')]",
+					"tenant": "[parameters('AzureDataExplorer1_properties_typeProperties_tenant')]",
+					"servicePrincipalId": "[parameters('AzureDataExplorer1_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataExplorer1_servicePrincipalKey')]"
+					},
+					"database": "[parameters('AzureDataExplorer1_properties_typeProperties_database')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Azure Data Explorer Command1",
+						"type": "AzureDataExplorerCommand",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"command": ".set-or-append LHR_SAP_Data_CI_CD_ADF <|\nLHR_SAP_Data_Prod\n| where Order ==2194270\n| project-away Manual_Entry_For_OEE,Manual_Entry_For_OEE_CreatedBy,Manual_Entry_Before_11AM,Manual_Entry_Before_11AM_CreatedBy",
+							"commandTimeout": "00:20:00"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDataExplorer1",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataExplorer1')]"
+			]
+		}
+	]
+}
