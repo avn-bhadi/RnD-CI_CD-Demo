@@ -1,0 +1,17 @@
+name: ValidateADF
+
+on:
+  pull_request:
+    branches: [ "adf_publish" ]
+  workflow_dispatch:
+
+jobs:
+  validate_adf:
+    runs-on: ubuntu-latest
+    steps:      
+      - uses: actions/checkout@v3
+      - name: Validate Data Factory resources
+        uses: Azure/data-factory-validate-action@v1.1.5
+        with:
+          path: ./
+          id: /subscriptions/bee36701-c5c5-4cb9-a323-e714f5395a83/resourceGroups/ODL-RnD-DevOps/providers/Microsoft.DataFactory/factories/TAPAL-SAP-ECC-INTEGRATION-DEV
