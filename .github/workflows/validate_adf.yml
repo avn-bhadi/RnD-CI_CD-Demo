@@ -13,5 +13,5 @@ jobs:
       - name: Validate Data Factory resources
         uses: Azure/data-factory-validate-action@v1.1.5
         with:
-          path: ./
+          path: ./ADF-Demo/
           id: /subscriptions/bee36701-c5c5-4cb9-a323-e714f5395a83/resourceGroups/ODL-RnD-DevOps/providers/Microsoft.DataFactory/factories/TAPAL-SAP-ECC-INTEGRATION-DEV
