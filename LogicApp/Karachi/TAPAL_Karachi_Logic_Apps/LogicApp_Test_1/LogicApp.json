@@ -1,0 +1,176 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logicAppName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "metadata": {
+        "description": "Name of the Logic App."
+      }
+    },
+    "logicAppLocation": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "allowedValues": [
+        "[resourceGroup().location]",
+        "australiaeast",
+        "australiasoutheast",
+        "brazilsouth",
+        "brazilsoutheast",
+        "canadacentral",
+        "canadaeast",
+        "centralindia",
+        "centralus",
+        "eastasia",
+        "eastus",
+        "eastus2",
+        "francecentral",
+        "francesouth",
+        "germanynorth",
+        "germanywestcentral",
+        "israelcentral",
+        "italynorth",
+        "japaneast",
+        "japanwest",
+        "koreacentral",
+        "koreasouth",
+        "northcentralus",
+        "northeurope",
+        "norwayeast",
+        "norwaywest",
+        "polandcentral",
+        "qatarcentral",
+        "southafricanorth",
+        "southafricawest",
+        "southcentralus",
+        "southeastasia",
+        "southindia",
+        "swedencentral",
+        "switzerlandnorth",
+        "switzerlandwest",
+        "uaecentral",
+        "uaenorth",
+        "uksouth",
+        "ukwest",
+        "westcentralus",
+        "westeurope",
+        "westindia",
+        "westus",
+        "westus2",
+        "westus3"
+      ],
+      "metadata": {
+        "description": "Location of the Logic App."
+      }
+    },
+    "kusto_1_Connection_Name": {
+      "type": "string",
+      "defaultValue": "kusto-1"
+    },
+    "kusto_1_Connection_DisplayName": {
+      "type": "string",
+      "defaultValue": "bhadi@avanceon.ae"
+    },
+    "kusto_1_privacySetting": {
+      "type": "string",
+      "metadata": {
+        "description": "Privacy Setting"
+      },
+      "allowedValues": [
+        "None",
+        "Private",
+        "Organizational",
+        "Public"
+      ]
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "name": "[parameters('logicAppName')]",
+      "type": "Microsoft.Logic/workflows",
+      "location": "[parameters('logicAppLocation')]",
+      "tags": {
+        "displayName": "LogicApp"
+      },
+      "apiVersion": "2016-06-01",
+      "properties": {
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "Run_control_command_and_render_a_chart": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['kusto']['connectionId']"
+                  }
+                },
+                "method": "post",
+                "body": {
+                  "cluster": "https://pocadx2.southeastasia.kusto.windows.net",
+                  "db": "tapaltea_719",
+                  "csl": ".set-or-append  DT_without_shift_v2_Logic_App with (distributed = True)  <|\nlet lutable=datatable(TagName1:string ,TagName:string)\n[\"Emergency Stop\",\"R1466\",\n\"Hopper Level\",\"R1467\",\n\"Idle Stop\",\"R1468\",\n\"Reel End\",\"R1469\",\n\"SKU Changeover\",\"R1478\"\n];\ndowntimeCalculator_Shift1_PLC_Auto_Trigger_Fault_Tag(\"R1466\",\"R1490\",\"R1477\") | union downtimeCalculator_Shift1_PLC_Auto_Trigger_Fault_Tag(\"R1467\",\"R1490\",\"R1477\"),\ndowntimeCalculator_Shift1_All_Machines_PLC_Auto_Trigger_Idle_Fault_Tag(\"R1468\",\"R1479\",\"R1490\",\"R1477\"),\ndowntimeCalculator_Shift1_PLC_Auto_Trigger_Fault_Tag(\"R1469\",\"R1490\",\"R1477\"),\ndowntimeCalculator_Shift1_PLC_Auto_Trigger_Fault_Tag(\"R1115\",\"R1490\",\"R1477\")\n| lookup kind=leftouter (lutable) on TagName\n| project fault_stop_name=TagName1,Event_Start_TimeStamp,Event_Finish_TimeStamp,DT_duration, Card_Number,Running_Shift_Value,Total_shift_time=toreal(0),Production_Count=toreal(0),Idle_Stoppage=toreal(0), WorkCenter = \"FS4LK01\", Source = \"PLC\"",
+                  "chartType": "Html Table"
+                },
+                "path": "/RunKustoAndVisualizeResults/true"
+              },
+              "runAfter": {}
+            }
+          },
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "Recurrence": {
+              "type": "Recurrence",
+              "recurrence": {
+                "frequency": "Day",
+                "interval": 1,
+                "timeZone": "Pakistan Standard Time",
+                "startTime": "2024-02-19T11:57:00Z"
+              }
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "kusto": {
+                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', 'kusto')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('kusto_1_Connection_Name'))]",
+                "connectionName": "[parameters('kusto_1_Connection_Name')]"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/connections', parameters('kusto_1_Connection_Name'))]"
+      ]
+    },
+    {
+      "type": "MICROSOFT.WEB/CONNECTIONS",
+      "apiVersion": "2018-07-01-preview",
+      "name": "[parameters('kusto_1_Connection_Name')]",
+      "location": "[parameters('logicAppLocation')]",
+      "properties": {
+        "api": {
+          "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', 'kusto')]"
+        },
+        "displayName": "[parameters('kusto_1_Connection_DisplayName')]",
+        "nonSecretParameterValues": {
+          "privacySetting": "[parameters('kusto_1_privacySetting')]"
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
